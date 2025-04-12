@@ -1,0 +1,11 @@
+# .hashnode/config.yaml
+publication:
+  domain: davidzhang.hashnode.dev # Your Hashnode blog domain
+  as_homepage: true # Set to false if you have a custom domain
+
+# Directory settings
+content_dir: articles
+
+# Post settings
+post:
+# Hashnode rendering preferences
