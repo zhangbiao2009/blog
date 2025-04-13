@@ -24,7 +24,7 @@ The Thread-Per-Connection model assigns one OS thread to each client connection,
 
 ## **Architecture Overview: Event-Driven vs. Goroutine-Based**
 
-Unlike the Go implementation that spawns a goroutine for each client, our C++ server uses an event loop with epoll to monitor multiple file descriptors simultaneously. This approach can achieve impressive performance with minimal resource usage, especially for I/O-bound applications with many connections.
+Unlike the Go implementation that spawns a goroutine for each client, our C++ server uses an event loop with `epoll` to monitor multiple file descriptors simultaneously. This approach can achieve impressive performance with minimal resource usage, especially for I/O-bound applications with many connections.
 
 ```plaintext
 Go Server:               C++ Server:
@@ -166,7 +166,7 @@ public:
 };
 ```
 
-Unlike the previous Go program that used mutexes, this implementation is designed for a single-threaded event loop, eliminating the need for thread synchronization. Instead, it uses non-blocking I/O with message queuing, an approach better suited to the epoll model. Please note messages are queued in each recipient's buffer rather than sent immediately, and the socket is registered for EPOLLOUT events to notify when it's ready for writing. When the event loop detects EPOLLOUT, it attempts to send the queued data non-blockingly, handling partial sends automatically and continuing transmission when the socket buffer has available space.
+Unlike the previous Go program that used mutexes, this implementation is designed for a single-threaded event loop, eliminating the need for thread synchronization. Instead, it uses non-blocking I/O with message queuing, an approach better suited to the epoll model. Please note messages are queued in each recipient's buffer rather than sent immediately, and the socket is registered for `EPOLLOUT` events to notify when it's ready for writing. When the event loop detects `EPOLLOUT`, it attempts to send the queued data non-blockingly, handling partial sends automatically and continuing transmission when the socket buffer has available space.
 
 ## **Non-Blocking Writes with EPOLLOUT**
 
@@ -262,7 +262,7 @@ vwhile (true) {
 }
 ```
 
-With edge-triggered epoll, we need to ensure we read all available data when notified. Our method correctly buffers incomplete messages, which is crucial for handling TCP streams. By watching for EPOLLOUT events, the server manages write operations efficiently, only when socket buffers have space, avoiding blocks with slow clients.
+With edge-triggered epoll, we need to ensure we read all available data when notified. Our method correctly buffers incomplete messages, which is crucial for handling TCP streams. By watching for `EPOLLOUT` events, the server manages write operations efficiently, only when socket buffers have space, avoiding blocks with slow clients.
 
 This single thread handles all network operations efficiently without blocking, enabling our server to scale to thousands of concurrent connections with minimal resource use.
 
@@ -323,7 +323,7 @@ Having implemented chat servers in both Go and C++, it's interesting to compare 
 
 **C++ Implementation**
 
-* **Concurrency Model**: Single-threaded event loop with epoll
+* **Concurrency Model**: Single-threaded event loop with `epoll`
     
 * **Memory Overhead**: Lower, only one thread regardless of connection count
     
@@ -334,11 +334,11 @@ Having implemented chat servers in both Go and C++, it's interesting to compare 
 * **Performance Characteristic**: Highly efficient for many connections with minimal activity
     
 
-Both the C++ and Go versions can handle tens of thousands of connections (the C10K problem), but the C++ implementation requires significantly more code (~400 LOC vs ~100 LOC) and is considerably more difficult to understand for those unfamiliar with epoll. However, the C++ version consumes less memory per connection by eliminating goroutine stacks and reduces scheduling overhead. If strictly high performance is required, this approach may be worth considering.
+Both the C++ and Go versions can handle tens of thousands of connections (the C10K problem), but the C++ implementation requires significantly more code (~400 LOC vs ~100 LOC) and is considerably more difficult to understand for those unfamiliar with `epoll`. However, the C++ version consumes less memory per connection by eliminating goroutine stacks and reduces scheduling overhead. If strictly high performance is required, this approach may be worth considering.
 
 ## **Conclusion**
 
-Building this chat server in C++ with epoll demonstrates a powerful alternative to Go's goroutine-based model. While Go's approach is more developer-friendly, the C++ implementation provides finer control over I/O operations and resource usage.
+Building this chat server in C++ with `epoll` demonstrates a powerful alternative to Go's goroutine-based model. While Go's approach is more developer-friendly, the C++ implementation provides finer control over I/O operations and resource usage.
 
 The most significant improvement in our C++ implementation is the sophisticated handling of non-blocking writes with message queuing. This approach ensures that slow clients don't block the server while maintaining correct message ordering—a critical requirement for any chat application.
 
@@ -349,6 +349,6 @@ Both implementations represent different architectural patterns:
 * The C++ version showcases the "event loop" model popular in high-performance servers
     
 
-For applications requiring maximum connection capacity with minimal resources, the C++ epoll approach has clear advantages. However, for scenarios where development speed and code maintainability are paramount, Go's goroutine model remains compelling.
+For applications requiring maximum connection capacity with minimal resources, the C++ `epoll` approach has clear advantages. However, for scenarios where development speed and code maintainability are paramount, Go's goroutine model remains compelling.
 
 The full source code for this C++ chat server is available on [GitHub](https://github.com/zhangbiao2009/chat-server-cpp). I encourage you to experiment with both implementations to better understand the tradeoffs between these different approaches to network programming.
