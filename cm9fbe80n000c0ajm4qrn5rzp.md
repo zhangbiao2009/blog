@@ -9,8 +9,8 @@ tags: cpp, backend, epoll, network-programming, chat-server
 
 After implementing a [simple chat server in Go](https://davidzhang.hashnode.dev/go-chat-server) using goroutines for client handling, I wanted to explore an alternative approach using C++ and the `epoll` event notification mechanism. While Go abstracts away many of the complexities of concurrent programming with goroutines, C++ with `epoll` gives us fine-grained control over I/O operations, potentially leading to better performance for high-load network applications.
 
-In this article, I'll explore how to implement an efficient, event-driven chat server in C++ that handles multiple clients concurrently through a single-threaded event loop—an interesting contrast to Go's goroutine-based approach.  
-  
+In this article, I'll explore how to implement an efficient, event-driven chat server in C++ that handles multiple clients concurrently through a single-threaded event loop—an interesting contrast to Go's goroutine-based approach.
+
 **Why We Don't Use Thread-Per-Connection in C++**
 
 1. **Memory Consumption**: OS threads consume 1-2MB each, meaning 1,000 connections could require 2GB of memory just for stacks.
@@ -166,7 +166,7 @@ A significant improvement in our implementation is proper handling of non-blocki
 3. Resume sending when the socket becomes writable again
     
 
-This is implemented in th[e handleClientWrit](vscode-file://vscode-app/Applications/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html)[e](vscode-file://vscode-app/Applications/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html) function:
+This is implemented in th[e handleClientWrite](vscode-file://vscode-app/Applications/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html) function:
 
 ```cpp
 void handleClientWrite(int clientFd, ClientManager& clientManager) {
@@ -191,13 +191,13 @@ void handleClientWrite(int clientFd, ClientManager& clientManager) {
 
 This approach prevents blocking on socket writes and allows us to handle back pressure efficiently, making the server robust under high load conditions.
 
-## **The P**[**ower of epoll: Un**](vscode-file://vscode-app/Applications/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html)**derstanding Edge vs. Level Triggering**
+## **The Power of epoll: Understanding Edge vs. Level Triggering**
 
 A key difference from the Go implementation is our use of epoll, which offers two notification modes:
 
-1. **Lev**[**el-triggered** (LT)](vscode-file://vscode-app/Applications/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html): Notifi[es when a file de](vscode-file://vscode-app/Applications/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html)scriptor is ready (def[ault mode)](vscode-file://vscode-app/Applications/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html)
+1. **Level-triggered** (LT): Notifies when a file descriptor is ready (default mode[)](vscode-file://vscode-app/Applications/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html)
     
-2. [**Edg**](vscode-file://vscode-app/Applications/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html)**e-triggered** (ET): Notifies only when sta[te changes from n](vscode-file://vscode-app/Applications/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html)ot-ready to ready
+2. **Ed**[**g**](vscode-file://vscode-app/Applications/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html)**e-triggered** (ET): Notifies only when state changes from not-ready to ready
     
 
 Our server uses a hybrid approach:
