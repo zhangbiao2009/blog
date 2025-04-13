@@ -179,7 +179,7 @@ A significant improvement in our implementation is proper handling of non-blocki
 3. Resume sending when the socket becomes writable again
     
 
-This is implemented in th[e handleClientWrite](vscode-file://vscode-app/Applications/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html) function:
+This is implemented in the [handleClientWrite](vscode-file://vscode-app/Applications/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html) function:
 
 ```cpp
 void handleClientWrite(int clientFd, ClientManager& clientManager) {
