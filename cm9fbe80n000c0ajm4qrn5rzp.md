@@ -3,7 +3,7 @@ title: "Building a High-Performance Chat Server with C++ and epoll"
 datePublished: Sun Apr 13 2025 07:19:43 GMT+0000 (Coordinated Universal Time)
 cuid: cm9fbe80n000c0ajm4qrn5rzp
 slug: cpp-chat-server
-tags: cpp, backend, epoll, network-programming, chat-server
+tags: cpp, tcp, backend-developments, epoll, network-programming
 
 ---
 
