@@ -13,7 +13,7 @@ In this article, I'll explore how to implement an efficient, event-driven chat s
 
 **Why We Don't Use Thread-Per-Connection in C++**
 
-The Thread-Per-Connection model assigns one OS thread to each client connection, providing a simple code flow. However, it has the following disadvantages:
+The Thread-Per-Connection model assigns one OS thread to each client connection, providing a simple code flow (similar to the goroutine-based approach in my previous article). However, it has the following disadvantages:
 
 1. **Memory Consumption**: OS threads consume 1-2MB each, meaning 1,000 connections could require 2GB of memory just for stacks.
     
@@ -123,17 +123,20 @@ Our ClientManager class handles client lifecycle and message broadcasting with a
 class ClientManager {
 private:
     std::unordered_map<int, Client*> clients;
-    std::mutex mutex;
 
 public:
+    ~ClientManager() {
+        for (auto& pair : clients) {
+            delete pair.second;
+        }
+    }
+
     void addClient(Client* client) {
-        std::lock_guard<std::mutex> lock(mutex);
         clients[client->fd] = client;
         std::cout << "Client added: " << client->nick << std::endl;
     }
 
     void sendMessage(int senderFd, const std::string& message) {
-        std::lock_guard<std::mutex> lock(mutex);
         std::string senderNick;
 
         if (clients.find(senderFd) != clients.end()) {
@@ -146,16 +149,24 @@ public:
 
         for (auto& pair : clients) {
             if (pair.first != senderFd) {
-                send(pair.first, fullMessage.c_str(), fullMessage.size(), 0);
+                Client* client = pair.second;
+                
+                // Queue the message instead of sending immediately
+                client->queueMessage(fullMessage);
+                
+                // If this is the first message in the queue, we need to register for EPOLLOUT
+                if (client->outgoingQueue.size() == 1 && client->currentSendBuffer.empty()) {
+                    updateClientEpollEvents(client->fd, EPOLLIN | EPOLLOUT | EPOLLET);
+                }
             }
         }
     }
 
-    // Other methods omitted for brevity...
-}
+    // ... other methods ...
+};
 ```
 
-Unlike the previous Go program that used mutexes, this implementation is designed for a single-threaded event loop, eliminating the need for thread synchronization. Instead, it uses non-blocking I/O with message queuing, an approach better suited to the epoll model.
+Unlike the previous Go program that used mutexes, this implementation is designed for a single-threaded event loop, eliminating the need for thread synchronization. Instead, it uses non-blocking I/O with message queuing, an approach better suited to the epoll model. Please note messages are queued in each recipient's buffer rather than sent immediately, and the socket is registered for EPOLLOUT events to notify when it's ready for writing. When the event loop detects EPOLLOUT, it attempts to send the queued data non-blockingly, handling partial sends automatically and continuing transmission when the socket buffer has available space.
 
 ## **Non-Blocking Writes with EPOLLOUT**
 
@@ -323,7 +334,7 @@ Having implemented chat servers in both Go and C++, it's interesting to compare 
 * **Performance Characteristic**: Highly efficient for many connections with minimal activity
     
 
-Both the C++ version and the Go version can handle tens of thousands of connections (the C10K problem). However, the C++ version uses less memory per connection because it doesn't have a goroutine stack.
+Both the C++ and Go versions can handle tens of thousands of connections (the C10K problem), but the C++ implementation requires significantly more code (~400 LOC vs ~100 LOC) and is considerably more difficult to understand for those unfamiliar with epoll. However, the C++ version consumes less memory per connection by eliminating goroutine stacks and reduces scheduling overhead. If strictly high performance is required, this approach may be worth considering.
 
 ## **Conclusion**
 
