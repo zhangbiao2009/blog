@@ -13,11 +13,13 @@ In this article, I'll explore how to implement an efficient, event-driven chat s
 
 **Why We Don't Use Thread-Per-Connection in C++**
 
+The Thread-Per-Connection model assigns one OS thread to each client connection, providing a simple code flow. However, it has the following disadvantages:
+
 1. **Memory Consumption**: OS threads consume 1-2MB each, meaning 1,000 connections could require 2GB of memory just for stacks.
     
 2. **Context Switching Overhead**: Threads require expensive CPU register saves/restores and cache flushes when switching between them.
     
-3. **Scheduler Limitations**: As thread count grows, the OS scheduler becomes a bottleneck, causing performance degradation and unpredictable latency.
+3. **Scheduler Limitations**: As thread count grows (thousands of them at most), the OS scheduler becomes a bottleneck, causing performance degradation and unpredictable latency.
     
 
 ## **Architecture Overview: Event-Driven vs. Goroutine-Based**
