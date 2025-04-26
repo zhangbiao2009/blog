@@ -351,4 +351,4 @@ Both implementations represent different architectural patterns:
 
 For applications requiring maximum connection capacity with minimal resources, the C++ `epoll` approach has clear advantages. However, for scenarios where development speed and code maintainability are paramount, Go's goroutine model remains compelling.
 
-The full source code for this C++ chat server is available on [GitHub](https://github.com/zhangbiao2009/chat-server-cpp). I encourage you to experiment with both implementations to better understand the tradeoffs between these different approaches to network programming.
+The full source code for this C++ chat server is available on [GitHub](https://github.com/zhangbiao2009/chat-server-cpp/blob/main/main.cpp). I encourage you to experiment with both implementations to better understand the tradeoffs between these different approaches to network programming.
